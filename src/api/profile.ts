@@ -46,3 +46,23 @@ export const getProfileInfo = async (data: ProfileInfoRequest): Promise<ProfileI
   const response = await apiClient.post<ProfileInfoResponse>('/api/profile/info', data);
   return response.data;
 };
+
+export interface ProfilePointLogRequest {
+  uidx: number;
+}
+
+export interface PointLogItem {
+  description: string;
+  change: number; // e.g. -500, +500
+  created_at?: string;
+}
+
+export interface ProfilePointLogResponse {
+  res_status: boolean;
+  logs?: PointLogItem[];
+}
+
+export const getProfilePointLog = async (data: ProfilePointLogRequest): Promise<ProfilePointLogResponse> => {
+  const response = await apiClient.post<ProfilePointLogResponse>('/api/profile/pointLog', data);
+  return response.data;
+};
