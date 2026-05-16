@@ -153,16 +153,44 @@ html,
 body {
   font-family: var(--font-sans);
   color: var(--color-text-primary);
-  background-color: var(--color-bg);
+  /* 데스크탑에서 양옆 배경 (모바일 디바이스 프레임 바깥) */
+  background-color: var(--color-bg-subtle);
   -webkit-font-smoothing: antialiased;
 }
 
-#root {
+body {
+  margin: 0;
   min-height: 100vh;
-  /* 모바일 전용: 최대 너비 제한, 중앙 정렬 */
+  /* 데스크탑에서 #root를 화면 가운데에 배치 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#root {
+  width: 100%;
   max-width: 390px;
-  margin: 0 auto;
+  min-height: 100vh;
   background-color: var(--color-bg);
+  overflow-y: auto;
+  /* iOS-safe 스크롤 */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 데스크탑(640px 이상): 390x844 모바일 디바이스 프레임처럼 표현 */
+@media (min-width: 640px) {
+  body {
+    padding: 24px 0;
+  }
+  #root {
+    height: 844px;
+    min-height: auto;
+    max-height: calc(100vh - 48px);
+    border-radius: 32px;
+    box-shadow:
+      0 20px 60px rgba(0, 0, 0, 0.15),
+      0 8px 24px rgba(0, 0, 0, 0.08);
+  }
 }
 
 button {
