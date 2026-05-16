@@ -1,1 +1,170 @@
 @import "tailwindcss";
+
+/* ============================================
+   가천 코인 Design System - Tailwind v4 Tokens
+   DESIGN.md 와 매칭되는 토큰들
+============================================ */
+
+@theme {
+  /* ===== Font ===== */
+  --font-sans: "Pretendard", system-ui, -apple-system, sans-serif;
+
+  /* ===== Brand Colors ===== */
+  --color-primary: #0057a8;
+  --color-primary-hover: #0077e5;
+  --color-primary-light: #e5f3ff;
+  --color-accent: #8b52ff;
+
+  /* ===== Semantic Colors ===== */
+  --color-success: #00a811;
+  --color-warning: #ffbb0f;
+  --color-error: #e50000;
+  --color-info: #0f8bff;
+
+  /* ===== Tag Colors (배경 / 텍스트) ===== */
+  --color-tag-physics: #8b52ff;
+  --color-tag-physics-bg: #eee5ff;
+  --color-tag-chemistry: #ff670f;
+  --color-tag-chemistry-bg: #ffefe5;
+  --color-tag-maths: #e5a400;
+  --color-tag-maths-bg: #fff8e5;
+  --color-tag-programming: #0077e5;
+  --color-tag-programming-bg: #e5f3ff;
+  --color-tag-language: #ff52ba;
+  --color-tag-language-bg: #ffe5f5;
+
+  /* ===== Neutral Scale (텍스트, 배경) ===== */
+  --color-neutral-99: #fcfcfc;
+  --color-neutral-94: #f0f0f0;
+  --color-neutral-89: #e3e3e3;
+  --color-neutral-84: #d6d6d6;
+  --color-neutral-79: #c9c9c9;
+  --color-neutral-73: #bababa;
+  --color-neutral-65: #a6a6a6;
+  --color-neutral-54: #8a8a8a;
+  --color-neutral-42: #6b6b6b;
+  --color-neutral-30: #4d4d4d;
+  --color-neutral-20: #333333;
+  --color-neutral-10: #1a1a1a;
+  --color-neutral-5: #0d0d0d;
+
+  /* ===== Text Colors (의미 단위) ===== */
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #6b6b6b;
+  --color-text-tertiary: #a6a6a6;
+  --color-text-disabled: #c9c9c9;
+  --color-text-inverse: #ffffff;
+
+  /* ===== Background ===== */
+  --color-bg: #ffffff;
+  --color-bg-subtle: #f0f0f0;
+  --color-bg-card: #fcfcfc;
+
+  /* ===== Border ===== */
+  --color-border: #e3e3e3;
+  --color-border-light: #f0f0f0;
+  --color-border-strong: #c9c9c9;
+
+  /* ===== Blue Scale (원본 토큰 - 그대로 쓸 수 있게) ===== */
+  --color-blue-99: #fafdff;
+  --color-blue-95: #e5f3ff;
+  --color-blue-90: #cce6ff;
+  --color-blue-84: #add8ff;
+  --color-blue-76: #85c4ff;
+  --color-blue-66: #52abff;
+  --color-blue-53: #0f8bff;
+  --color-blue-45: #0077e5;
+  --color-blue-34: #0057a8;
+  --color-blue-30: #004f99;
+  --color-blue-24: #003f7a;
+  --color-blue-10: #001a33;
+
+  /* ===== Violet Scale ===== */
+  --color-violet-99: #fcfaff;
+  --color-violet-95: #eee5ff;
+  --color-violet-90: #dcccff;
+  --color-violet-84: #c7adff;
+  --color-violet-76: #ab85ff;
+  --color-violet-66: #8b52ff;
+  --color-violet-53: #5b0fff;
+  --color-violet-45: #4900e5;
+  --color-violet-34: #3500a8;
+
+  /* ===== Orange Scale ===== */
+  --color-orange-99: #fffcfa;
+  --color-orange-95: #ffefe5;
+  --color-orange-90: #ffdfcc;
+  --color-orange-84: #ffcbad;
+  --color-orange-76: #ffb185;
+  --color-orange-66: #ff9152;
+  --color-orange-53: #ff670f;
+  --color-orange-45: #e55400;
+  --color-orange-34: #a83e00;
+
+  /* ===== Red Scale ===== */
+  --color-red-99: #fffafa;
+  --color-red-95: #ffe5e5;
+  --color-red-90: #ffcccc;
+  --color-red-76: #ff8585;
+  --color-red-66: #ff5252;
+  --color-red-53: #ff0f0f;
+  --color-red-45: #e50000;
+  --color-red-34: #a80000;
+
+  /* ===== Green Scale ===== */
+  --color-green-95: #e5ffe8;
+  --color-green-90: #ccffd1;
+  --color-green-66: #52ff63;
+  --color-green-48: #00f518;
+  --color-green-34: #00a811;
+  --color-green-24: #007a0c;
+
+  /* ===== Yellow Scale ===== */
+  --color-yellow-95: #fff8e5;
+  --color-yellow-90: #fff0cc;
+  --color-yellow-66: #ffce52;
+  --color-yellow-53: #ffbb0f;
+  --color-yellow-45: #e5a400;
+  --color-yellow-30: #996e00;
+
+  /* ===== Pink Scale ===== */
+  --color-pink-95: #ffe5f5;
+  --color-pink-90: #ffcceb;
+  --color-pink-66: #ff52ba;
+  --color-pink-53: #ff0f9f;
+  --color-pink-45: #e5008a;
+
+  /* ===== Border Radius ===== */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  /* ===== Shadow ===== */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-modal: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* ============================================
+   Global Styles
+============================================ */
+
+html,
+body {
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+  /* 모바일 전용: 최대 너비 제한, 중앙 정렬 */
+  max-width: 390px;
+  margin: 0 auto;
+  background-color: var(--color-bg);
+}
+
+button {
+  font-family: inherit;
+}
