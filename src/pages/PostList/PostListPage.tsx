@@ -15,7 +15,13 @@ const PostListPage: React.FC = () => {
     const fetchPosts = async () => {
       try {
         const response = await postApi.getPosts();
-        setPosts(response.posts);
+        // 모집중(RECRUITING)을 항상 앞으로 — sort는 stable이라 동일 상태 내에서는 원래 순서 유지
+        const sorted = [...response.posts].sort((a, b) => {
+          const aRank = a.status === 'RECRUITING' ? 0 : 1;
+          const bRank = b.status === 'RECRUITING' ? 0 : 1;
+          return aRank - bRank;
+        });
+        setPosts(sorted);
       } catch (error) {
         console.error("Failed to load posts:", error);
       } finally {
