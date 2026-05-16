@@ -119,7 +119,7 @@ function PostDetailPage() {
   // 로딩 / 에러 처리
   if (isLoading) {
     return (
-      <div className="flex min-h-full flex-col bg-bg">
+      <div className="flex min-h-full flex-col bg-bg-subtle">
         <Header title="게시글 상세" />
         <div className="flex flex-1 items-center justify-center">
           <p className="text-text-secondary">로딩 중...</p>
@@ -130,7 +130,7 @@ function PostDetailPage() {
 
   if (!post) {
     return (
-      <div className="flex min-h-full flex-col bg-bg">
+      <div className="flex min-h-full flex-col bg-bg-subtle">
         <Header title="게시글 상세" />
         <div className="flex flex-1 items-center justify-center">
           <p className="text-text-secondary">게시글을 찾을 수 없습니다.</p>
@@ -386,7 +386,7 @@ function PostDetailPage() {
   }
 
   return (
-    <div className="flex min-h-full flex-col bg-bg">
+    <div className="flex min-h-full flex-col bg-bg-subtle">
       <Header title="게시글 상세" />
 
       <main className="flex flex-1 flex-col gap-6 px-5 py-5 pb-10">
@@ -423,7 +423,7 @@ function PostDetailPage() {
         </section>
 
         {/* 태그 + 작성자/마감 박스 */}
-        <section className="flex flex-col gap-3 rounded-2xl bg-bg-subtle p-4">
+        <section className="flex flex-col gap-3 rounded-2xl border border-border-light bg-bg p-4 shadow-card">
           <div className="flex flex-wrap gap-2">
             {post.tags.length === 0 ? (
               <span className="text-[13px] text-text-tertiary">태그 없음</span>
@@ -469,7 +469,7 @@ function PostDetailPage() {
         {/* 내용설명 */}
         <section className="flex flex-col gap-3">
           <h2 className="text-[16px] font-semibold text-text-primary">내용설명</h2>
-          <div className="min-h-[120px] whitespace-pre-wrap rounded-2xl bg-bg-subtle p-4 text-[14px] leading-relaxed text-text-primary">
+          <div className="min-h-30 whitespace-pre-wrap rounded-2xl border border-border-light bg-bg p-4 text-[14px] leading-relaxed text-text-primary shadow-card">
             {post.text}
           </div>
         </section>
@@ -479,7 +479,7 @@ function PostDetailPage() {
           <h2 className="text-[16px] font-semibold text-text-primary">모집 역할</h2>
           <div className="flex flex-col gap-3">
             {accepts.length === 0 ? (
-              <p className="rounded-2xl bg-bg-subtle p-4 text-center text-[13px] text-text-tertiary">
+              <p className="rounded-2xl border border-border-light bg-bg p-4 text-center text-[13px] text-text-tertiary shadow-card">
                 모집 역할이 없습니다.
               </p>
             ) : (
@@ -489,7 +489,7 @@ function PostDetailPage() {
                 return (
                   <div
                     key={role.aidx}
-                    className="relative flex items-center justify-between overflow-hidden rounded-2xl bg-bg-subtle p-4"
+                    className="relative flex items-center justify-between overflow-hidden rounded-2xl border border-border-light bg-bg p-4 shadow-card"
                   >
                     <div className="flex flex-col gap-1">
                       <span className="text-[15px] font-semibold text-text-primary">
@@ -502,7 +502,7 @@ function PostDetailPage() {
 
                     {/* 시안 — 내가 신청한 자리에 "지원 완료" 도장 */}
                     {showStamp && (
-                      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 rounded-md border-2 border-neutral-65 bg-bg/70 px-3 py-1 text-[14px] font-bold text-neutral-65 opacity-80">
+                      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 rounded-md border-2 border-neutral-65 bg-bg-subtle/80 px-3 py-1 text-[14px] font-bold text-neutral-65 opacity-80">
                         지원 완료
                       </div>
                     )}
@@ -530,7 +530,7 @@ function PostDetailPage() {
                   void handleSubmitComment();
                 }
               }}
-              className="h-11 flex-1 rounded-xl bg-bg-subtle px-4 text-[14px] text-text-primary outline-none placeholder:text-text-tertiary"
+              className="h-11 flex-1 rounded-xl border border-border-light bg-bg px-4 text-[14px] text-text-primary outline-none placeholder:text-text-tertiary focus:border-primary"
             />
             <button
               type="button"
@@ -551,7 +551,7 @@ function PostDetailPage() {
               comments.map((c) => (
                 <div
                   key={c.cidx}
-                  className="flex flex-col gap-2 rounded-2xl bg-bg-subtle p-4"
+                  className="flex flex-col gap-2 rounded-2xl border border-border-light bg-bg p-4 shadow-card"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-[12px] font-bold text-text-inverse">

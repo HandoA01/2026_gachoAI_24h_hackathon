@@ -4,6 +4,17 @@ import { useAuthStore } from '../../store/authStore';
 import { getProfilePoint, getProfilePointLog } from '../../api/profile';
 import type { PointLogItem } from '../../api/profile';
 
+// 백엔드 응답이 없을 때 사용할 mock 거래 내역 (데모용)
+const MOCK_POINT_LOGS: PointLogItem[] = [
+  { description: '봉사활동 보상', change: 500 },
+  { description: '학생회 기부', change: -200 },
+  { description: '활동 참여 보상', change: 150 },
+  { description: '커피 송금 (홍길동)', change: -300 },
+  { description: '게시글 작성', change: -50 },
+  { description: '활동 참여 보상', change: 200 },
+  { description: '회원가입 보너스', change: 1000 },
+];
+
 const Home = () => {
   const navigate = useNavigate();
   const { uidx } = useAuthStore();
@@ -33,8 +44,16 @@ const Home = () => {
           setPoint(pointRes.value.point);
         }
 
-        if (logRes.status === 'fulfilled' && logRes.value.res_status && logRes.value.logs) {
+        if (
+          logRes.status === 'fulfilled' &&
+          logRes.value.res_status &&
+          logRes.value.logs &&
+          logRes.value.logs.length > 0
+        ) {
           setLogs(logRes.value.logs);
+        } else {
+          // API 응답이 비어있으면 mock 데이터로 fallback (데모용)
+          setLogs(MOCK_POINT_LOGS);
         }
       } catch (err) {
         console.error('Failed to fetch home data:', err);
@@ -87,7 +106,7 @@ const Home = () => {
 
           <button
             onClick={() => setActiveTab('home')}
-            className={`relative z-10 w-[58px] rounded-xl py-2.5 text-sm font-bold transition-colors duration-300 ${
+            className={`relative z-10 w-14.5 rounded-xl py-2.5 text-sm font-bold transition-colors duration-300 ${
               activeTab === 'home'
                 ? 'bg-transparent text-text-inverse'
                 : 'bg-bg-subtle text-text-tertiary hover:bg-neutral-89'
@@ -98,7 +117,7 @@ const Home = () => {
 
           <button
             onClick={() => setActiveTab('history')}
-            className={`relative z-10 w-[98px] rounded-xl py-2.5 text-sm font-bold transition-colors duration-300 ${
+            className={`relative z-10 w-24.5 rounded-xl py-2.5 text-sm font-bold transition-colors duration-300 ${
               activeTab === 'history'
                 ? 'bg-transparent text-text-inverse'
                 : 'bg-bg-subtle text-text-tertiary hover:bg-neutral-89'
@@ -133,8 +152,41 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Empty Placeholder Card */}
-            <div className="h-64 w-full rounded-2xl bg-neutral-89"></div>
+            {/* 최근 포인트 거래 내역 위젯 */}
+            <div className="flex w-full flex-col gap-3 rounded-2xl border border-border-light bg-bg p-5 shadow-card">
+              <div className="flex items-center justify-between">
+                <h3 className="text-[15px] font-bold text-text-primary">
+                  최근 거래 내역
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('history')}
+                  className="text-[12px] font-semibold text-primary"
+                >
+                  전체보기
+                </button>
+              </div>
+              <ul className="flex flex-col gap-2.5">
+                {logs.slice(0, 5).map((log, index) => (
+                  <li
+                    key={index}
+                    className="flex items-center justify-between"
+                  >
+                    <span className="text-[13px] text-text-secondary">
+                      {log.description}
+                    </span>
+                    <span
+                      className={`text-[13px] font-bold ${
+                        log.change > 0 ? 'text-success' : 'text-error'
+                      }`}
+                    >
+                      {log.change > 0 ? '+' : '-'}
+                      {Math.abs(log.change).toLocaleString()}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           {/* History Content */}
@@ -145,33 +197,50 @@ const Home = () => {
                 : 'pointer-events-none z-0 translate-y-4 opacity-0'
             }`}
           >
-            {/* Thin Placeholder Card */}
-            <div className="h-12 w-full rounded-xl bg-neutral-89"></div>
+            {/* Summary Bar */}
+            <div className="flex h-12 w-full items-center justify-between rounded-xl border border-border-light bg-bg px-4 shadow-card">
+              <span className="text-[13px] font-semibold text-text-secondary">
+                총 {logs.length}건
+              </span>
+              <span className="text-[13px] font-bold text-text-primary">
+                현재 잔액 {point.toLocaleString()}P
+              </span>
+            </div>
 
             {/* Large Primary History Card */}
-            <div className="flex min-h-[300px] flex-col rounded-xl bg-primary p-5 text-text-inverse shadow-sm">
+            <div className="flex min-h-75 flex-col rounded-xl bg-primary p-5 text-text-inverse shadow-sm">
               <div className="mb-6 text-lg font-bold">
                 보유 포인트{' '}
                 <span className="ml-2 text-xl font-extrabold">
                   {point.toLocaleString()}
                 </span>
               </div>
-              <div className="flex flex-col gap-3 text-[15px] font-bold tracking-wide">
+              <ul className="flex flex-col gap-3 text-[15px] font-bold tracking-wide">
                 {logs.length > 0 ? (
                   logs.map((log, index) => (
-                    <div key={index}>
-                      {log.description}{' '}
-                      {log.change > 0
-                        ? `+ ${log.change.toLocaleString()}`
-                        : `- ${Math.abs(log.change).toLocaleString()}`}
-                    </div>
+                    <li
+                      key={index}
+                      className="flex items-center justify-between border-b border-text-inverse/15 pb-2 last:border-b-0"
+                    >
+                      <span>{log.description}</span>
+                      <span
+                        className={
+                          log.change > 0
+                            ? 'text-text-inverse'
+                            : 'text-text-inverse/80'
+                        }
+                      >
+                        {log.change > 0 ? '+ ' : '- '}
+                        {Math.abs(log.change).toLocaleString()}
+                      </span>
+                    </li>
                   ))
                 ) : (
                   <div className="font-medium text-text-inverse/70">
                     아직 포인트 내역이 없습니다.
                   </div>
                 )}
-              </div>
+              </ul>
             </div>
           </div>
         </div>

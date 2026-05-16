@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Header from '../../components/common/Header';
-import PostCard from '../../components/post/PostCard';
-import Button from '../../components/Button/Button';
-import type { Post } from '../../types/post';
-import { postApi } from '../../api/post';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Header from "../../components/common/Header";
+import PostCard from "../../components/post/PostCard";
+import Button from "../../components/Button/Button";
+import type { Post } from "../../types/post";
+import { postApi } from "../../api/post";
 
 const PostListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ const PostListPage: React.FC = () => {
         const response = await postApi.getPosts();
         setPosts(response.posts);
       } catch (error) {
-        console.error('Failed to load posts:', error);
+        console.error("Failed to load posts:", error);
       } finally {
         setIsLoading(false);
       }
@@ -27,9 +27,9 @@ const PostListPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative flex min-h-full flex-col bg-bg">
+    <div className="relative flex min-h-full flex-col bg-bg-subtle">
       <Header title="전체 게시글" />
-      
+
       <main className="flex flex-1 flex-col gap-3 p-4">
         {isLoading ? (
           <div className="flex flex-1 items-center justify-center">
@@ -37,11 +37,7 @@ const PostListPage: React.FC = () => {
           </div>
         ) : (posts?.length ?? 0) > 0 ? (
           posts.map((post) => (
-            <PostCard 
-              key={post.id} 
-              post={post} 
-              onClick={() => navigate(`/posts/${post.id}`)}
-            />
+            <PostCard key={post.id} post={post} onClick={() => navigate(`/posts/${post.id}`)} />
           ))
         ) : (
           <div className="flex flex-1 items-center justify-center">
@@ -50,11 +46,12 @@ const PostListPage: React.FC = () => {
         )}
       </main>
 
-      <div className="fixed bottom-6 right-6">
-        <Button 
-          size="medium" 
-          onClick={() => navigate('/posts/create')}
-          className="shadow-lg rounded-full px-6"
+      {/* bottom nav(72px) 위 안전 거리 */}
+      <div className="fixed top-[650px] right-6">
+        <Button
+          size="medium"
+          onClick={() => navigate("/posts/create")}
+          className="rounded-full px-6 shadow-lg"
         >
           + 글쓰기
         </Button>
