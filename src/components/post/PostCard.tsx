@@ -1,5 +1,5 @@
 import React from 'react';
-import { Post } from '../../types/post';
+import type { Post } from '../../types/post';
 import StatusBadge from '../common/StatusBadge';
 import TagChip from '../common/TagChip';
 

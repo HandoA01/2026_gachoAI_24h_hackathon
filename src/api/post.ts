@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import { PostListResponse, Post } from '../types/post';
+import type { PostListResponse, Post } from '../types/post';
 
 export const postApi = {
   getPosts: async (params?: {
@@ -8,98 +8,42 @@ export const postApi = {
     tag?: string;
     status?: string;
   }): Promise<PostListResponse> => {
-    try {
-      // 실제 API 호출 (백엔드 준비 시 주석 해제)
-      // const response = await apiClient.get('/api/posts', { params });
-      // return response.data;
-
-      // Mock Data for "전체 글.png"
-      const mockPosts: Post[] = [
-        {
-          id: 1,
-          title: '1',
-          content: '첫 번째 게시글입니다.',
-          author: { id: 1, userId: 'user1', name: '홍길동', email: 'test@gachon.ac.kr', coin: 100, tags: [], expertTitles: [], createdAt: '' },
-          tags: ['공부'],
-          roles: [],
-          totalCoinReward: 0,
-          status: 'RECRUITING',
-          deadline: '2026-12-31',
-          createdAt: '2026-05-16',
-          updatedAt: '2026-05-16',
-          participants: [],
-          commentCount: 0,
-        },
-        {
-          id: 2,
-          title: '2',
-          content: '두 번째 게시글입니다.',
-          author: { id: 2, userId: 'user2', name: '김철수', email: 'test2@gachon.ac.kr', coin: 100, tags: [], expertTitles: [], createdAt: '' },
-          tags: ['음악'],
-          roles: [],
-          totalCoinReward: 0,
-          status: 'RECRUITING',
-          deadline: '2026-12-31',
-          createdAt: '2026-05-16',
-          updatedAt: '2026-05-16',
-          participants: [],
-          commentCount: 0,
-        },
-        {
-          id: 3,
-          title: '333',
-          content: '세 번째 게시글입니다.',
-          author: { id: 1, userId: 'user1', name: '홍길동', email: 'test@gachon.ac.kr', coin: 100, tags: [], expertTitles: [], createdAt: '' },
-          tags: ['공부'],
-          roles: [],
-          totalCoinReward: 0,
-          status: 'RECRUITING',
-          deadline: '2026-12-31',
-          createdAt: '2026-05-16',
-          updatedAt: '2026-05-16',
-          participants: [],
-          commentCount: 0,
-        },
-        {
-          id: 4,
-          title: '44444',
-          content: '네 번째 게시글입니다.',
-          author: { id: 3, userId: 'user3', name: '이영희', email: 'test3@gachon.ac.kr', coin: 100, tags: [], expertTitles: [], createdAt: '' },
-          tags: ['공부'],
-          roles: [],
-          totalCoinReward: 0,
-          status: 'RECRUITING',
-          deadline: '2026-12-31',
-          createdAt: '2026-05-16',
-          updatedAt: '2026-05-16',
-          participants: [],
-          commentCount: 0,
-        },
-        {
-          id: 5,
-          title: '555555',
-          content: '마감된 게시글입니다.',
-          author: { id: 1, userId: 'user1', name: '홍길동', email: 'test@gachon.ac.kr', coin: 100, tags: [], expertTitles: [], createdAt: '' },
-          tags: ['공부'],
-          roles: [],
-          totalCoinReward: 0,
-          status: 'COMPLETED',
-          deadline: '2026-05-10', // 이미 지난 날짜
-          createdAt: '2026-05-01',
-          updatedAt: '2026-05-10',
-          participants: [],
-          commentCount: 0,
-        },
-      ];
-
+    const response = await apiClient.post('/api/donation/list', params);
+    console.log('getPosts response:', response.data);
+    
+    // 백엔드 응답이 배열인 경우
+    if (Array.isArray(response.data)) {
       return {
-        posts: mockPosts,
-        totalCount: mockPosts.length,
+        posts: response.data,
+        totalCount: response.data.length,
         hasNext: false,
       };
-    } catch (error) {
-      console.error('Failed to fetch posts:', error);
-      throw error;
     }
+    
+    // 백엔드 응답에 posts 필드가 없고 다른 필드(예: list)가 있는 경우 대응
+    if (response.data && !response.data.posts && response.data.list) {
+      return {
+        ...response.data,
+        posts: response.data.list,
+      };
+    }
+
+    return response.data;
+  },
+  getPostById: async (postId: number): Promise<Post> => {
+    const response = await apiClient.get(`/api/donation/${postId}`);
+    console.log('getPostById response:', response.data);
+    return response.data;
+  },
+  createPost: async (data: any): Promise<Post> => {
+    const response = await apiClient.post('/api/donation/write', data);
+    console.log('createPost response:', response.data);
+    return response.data;
+  },
+  joinPost: async (postId: number, roleId: number): Promise<void> => {
+    await apiClient.post(`/api/donation/${postId}/join`, { roleId });
+  },
+  updateParticipantStatus: async (postId: number, participantId: number, status: 'APPROVED' | 'REJECTED'): Promise<void> => {
+    await apiClient.patch(`/api/donation/${postId}/participants/${participantId}`, { status });
   },
 };
