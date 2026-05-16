@@ -63,6 +63,7 @@ export interface PostDetail {
 }
 
 // 백엔드 detail 응답 → PostDetail 어댑터
+// ⚠️ 명세는 'writerIdx'지만 실제 응답은 'writeridx' — 두 키 모두 fallback 처리
 function toPostDetail(d: any): PostDetail {
   const tags: string[] = [];
   if (d.exercise === 0) tags.push('운동');
@@ -73,7 +74,7 @@ function toPostDetail(d: any): PostDetail {
 
   return {
     didx: d.didx,
-    writerIdx: d.writerIdx,
+    writerIdx: d.writeridx ?? d.writerIdx ?? 0,
     status: d.status,
     title: d.title ?? '',
     duedate: d.duedate ?? '',
@@ -96,6 +97,11 @@ export interface CreatePostInput {
 export interface CreatePostResponse {
   res_status: boolean;
   didx?: number;
+}
+
+// 게시글 상태 변경 응답
+export interface ChangePostStatusResponse {
+  res_status: boolean;
 }
 
 export const postApi = {
@@ -150,6 +156,19 @@ export const postApi = {
       payload,
     );
     console.log('createPost response:', response.data);
+    return response.data;
+  },
+  // POST /api/donation/statusChange { didx, status }
+  // status: 0 = 모집 마감, 1 = 모집 중
+  changePostStatus: async (
+    didx: number,
+    status: number,
+  ): Promise<ChangePostStatusResponse> => {
+    const response = await apiClient.post<ChangePostStatusResponse>(
+      '/api/donation/statusChange',
+      { didx, status },
+    );
+    console.log('changePostStatus response:', response.data);
     return response.data;
   },
   joinPost: async (postId: number, roleId: number): Promise<void> => {

@@ -27,3 +27,57 @@ export async function getAcceptDetail(didx: number): Promise<AcceptRole[]> {
   if (!data?.res_status) return [];
   return data.accept ?? [];
 }
+
+// 공통 응답 (지원/취소/지급/거절 모두 동일)
+export interface AcceptActionResponse {
+  res_status: boolean;
+}
+
+// POST /api/accept/subscribe { uidx, aidx } — 역할 신청
+export async function subscribeRole(
+  uidx: number,
+  aidx: number,
+): Promise<AcceptActionResponse> {
+  const { data } = await apiClient.post<AcceptActionResponse>(
+    '/api/accept/subscribe',
+    { uidx, aidx },
+  );
+  console.log('subscribeRole response:', data);
+  return data;
+}
+
+// POST /api/accept/subscribeCancel { aidx } — 역할 신청 취소
+export async function cancelSubscribe(
+  aidx: number,
+): Promise<AcceptActionResponse> {
+  const { data } = await apiClient.post<AcceptActionResponse>(
+    '/api/accept/subscribeCancel',
+    { aidx },
+  );
+  console.log('cancelSubscribe response:', data);
+  return data;
+}
+
+// POST /api/accept/approval { aidx } — 작성자가 신청자에게 포인트 지급
+export async function approveAccept(
+  aidx: number,
+): Promise<AcceptActionResponse> {
+  const { data } = await apiClient.post<AcceptActionResponse>(
+    '/api/accept/approval',
+    { aidx },
+  );
+  console.log('approveAccept response:', data);
+  return data;
+}
+
+// POST /api/accept/refusal { aidx } — 작성자가 신청자에게 포인트 지급 거절
+export async function refuseAccept(
+  aidx: number,
+): Promise<AcceptActionResponse> {
+  const { data } = await apiClient.post<AcceptActionResponse>(
+    '/api/accept/refusal',
+    { aidx },
+  );
+  console.log('refuseAccept response:', data);
+  return data;
+}

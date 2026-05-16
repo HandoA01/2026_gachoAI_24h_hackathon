@@ -3,7 +3,14 @@ import { useParams } from 'react-router-dom';
 import Header from '../../components/common/Header';
 import { useAuthStore } from '../../store/authStore';
 import { postApi, type PostDetail } from '../../api/post';
-import { getAcceptDetail, type AcceptRole } from '../../api/accept';
+import {
+  getAcceptDetail,
+  subscribeRole,
+  cancelSubscribe,
+  approveAccept,
+  refuseAccept,
+  type AcceptRole,
+} from '../../api/accept';
 import {
   getCommentDetail,
   writeComment,
@@ -32,6 +39,14 @@ function PostDetailPage() {
 
   // uidx → name 캐시 (작성자/댓글/대댓글 이름 표시용)
   const [userNames, setUserNames] = useState<Map<number, string>>(new Map());
+
+  // 상태 변경 (작성자 전용)
+  const [isChangingStatus, setIsChangingStatus] = useState(false);
+
+  // 모집 역할 액션 로딩 (어떤 aidx가 호출 중인지)
+  const [actionLoadingAidx, setActionLoadingAidx] = useState<number | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!postId) return;
@@ -126,6 +141,88 @@ function PostDetailPage() {
 
   const isRecruiting = post.status === 1;
   const didx = post.didx;
+  const isAuthor = uidx != null && post.writerIdx === uidx;
+
+  // 모집 역할 액션 공통 처리
+  async function runRoleAction(
+    aidx: number,
+    action: () => Promise<{ res_status: boolean }>,
+    failMessage: string,
+  ) {
+    if (actionLoadingAidx !== null) return;
+    setActionLoadingAidx(aidx);
+    try {
+      const res = await action();
+      if (res.res_status) {
+        // 역할 목록 다시 fetch
+        const data = await getAcceptDetail(didx);
+        setAccepts(data);
+      } else {
+        alert(failMessage);
+      }
+    } catch (err) {
+      console.error('Role action failed:', err);
+      alert('처리 중 오류가 발생했습니다.');
+    } finally {
+      setActionLoadingAidx(null);
+    }
+  }
+
+  function handleSubscribe(aidx: number) {
+    if (!uidx) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+    void runRoleAction(
+      aidx,
+      () => subscribeRole(uidx, aidx),
+      '지원에 실패했습니다.',
+    );
+  }
+
+  function handleCancel(aidx: number) {
+    void runRoleAction(
+      aidx,
+      () => cancelSubscribe(aidx),
+      '지원 취소에 실패했습니다.',
+    );
+  }
+
+  function handleApprove(aidx: number) {
+    void runRoleAction(
+      aidx,
+      () => approveAccept(aidx),
+      '포인트 지급에 실패했습니다.',
+    );
+  }
+
+  function handleRefuse(aidx: number) {
+    void runRoleAction(
+      aidx,
+      () => refuseAccept(aidx),
+      '거절 처리에 실패했습니다.',
+    );
+  }
+
+  async function handleToggleStatus() {
+    if (isChangingStatus) return;
+    const nextStatus = isRecruiting ? 0 : 1; // 1↔0 토글
+    setIsChangingStatus(true);
+    try {
+      const res = await postApi.changePostStatus(didx, nextStatus);
+      if (res.res_status) {
+        // 로컬 state만 업데이트 (전체 refetch 불필요)
+        setPost((prev) => (prev ? { ...prev, status: nextStatus } : prev));
+      } else {
+        alert('상태 변경에 실패했습니다.');
+      }
+    } catch (err) {
+      console.error('Failed to change status:', err);
+      alert('상태 변경 중 오류가 발생했습니다.');
+    } finally {
+      setIsChangingStatus(false);
+    }
+  }
 
   // 댓글만 다시 불러오기 (작성 후 새로고침용)
   async function refreshComments() {
@@ -189,36 +286,98 @@ function PostDetailPage() {
   }
 
   // 모집 역할 버튼 상태 분기
+  // role.status: 0=신청 가능, 1=신청 완료, 2=포인트 지급 승인, 3=포인트 지급 반려
   function renderRoleButton(role: AcceptRole) {
-    // 게시글 자체가 모집 마감
+    const loading = actionLoadingAidx === role.aidx;
+
+    // 포인트 지급 승인됨
+    if (role.status === 2) {
+      return (
+        <div className="relative z-10 flex h-9 items-center rounded-lg bg-success px-4 text-[13px] font-semibold text-text-inverse">
+          지급 완료
+        </div>
+      );
+    }
+
+    // 포인트 지급 거절됨
+    if (role.status === 3) {
+      return (
+        <div className="relative z-10 flex h-9 items-center rounded-lg bg-error px-4 text-[13px] font-semibold text-text-inverse">
+          지급 거절
+        </div>
+      );
+    }
+
+    // 게시글 모집 마감 (status === 0)
     if (!isRecruiting) {
+      // 작성자 + 신청자 있는 자리 → 지급 / 거절
+      if (isAuthor && role.uidx != null) {
+        return (
+          <div className="relative z-10 flex gap-2">
+            <button
+              type="button"
+              onClick={() => handleApprove(role.aidx)}
+              disabled={loading}
+              className="h-9 rounded-lg bg-success px-3 text-[13px] font-semibold text-text-inverse active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? '...' : '지급'}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleRefuse(role.aidx)}
+              disabled={loading}
+              className="h-9 rounded-lg bg-error px-3 text-[13px] font-semibold text-text-inverse active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? '...' : '거절'}
+            </button>
+          </div>
+        );
+      }
+      // 빈 자리 또는 비작성자 → 비활성
       return (
         <div className="flex h-9 items-center rounded-lg bg-neutral-65 px-4 text-[13px] font-semibold text-text-inverse">
           모집 마감
         </div>
       );
     }
-    // 비어있음 → 지원 가능
+
+    // 모집중 + 빈 자리
     if (role.uidx === null) {
+      if (isAuthor) {
+        // 작성자가 자기 글에 지원하면 안 됨 → 비활성 라벨
+        return (
+          <div className="flex h-9 items-center rounded-lg border border-border bg-bg px-4 text-[13px] font-medium text-text-tertiary">
+            신청 대기
+          </div>
+        );
+      }
       return (
         <button
           type="button"
-          onClick={() => alert('지원 API 명세를 받으면 연결됩니다.')}
-          className="h-9 rounded-lg bg-success px-4 text-[13px] font-semibold text-text-inverse active:scale-95"
+          onClick={() => handleSubscribe(role.aidx)}
+          disabled={loading}
+          className="h-9 rounded-lg bg-success px-4 text-[13px] font-semibold text-text-inverse active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          지원하기
+          {loading ? '...' : '지원하기'}
         </button>
       );
     }
-    // 내가 지원한 자리
+
+    // 모집중 + 내가 신청한 자리 → 지원취소
     if (role.uidx === uidx) {
       return (
-        <div className="flex h-9 items-center rounded-lg bg-error px-4 text-[13px] font-semibold text-text-inverse">
-          지원완료
-        </div>
+        <button
+          type="button"
+          onClick={() => handleCancel(role.aidx)}
+          disabled={loading}
+          className="relative z-10 h-9 rounded-lg bg-error px-4 text-[13px] font-semibold text-text-inverse active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {loading ? '...' : '지원취소'}
+        </button>
       );
     }
-    // 다른 사람이 이미 차지
+
+    // 모집중 + 다른 사람이 차지한 자리 → 비활성
     return (
       <div className="flex h-9 items-center rounded-lg bg-neutral-65 px-4 text-[13px] font-semibold text-text-inverse">
         모집 마감
@@ -236,13 +395,31 @@ function PostDetailPage() {
           <h1 className="text-[24px] font-bold leading-tight text-text-primary">
             {post.title}
           </h1>
-          <span
-            className={`mt-1 flex h-7 shrink-0 items-center rounded-full px-3 text-[12px] font-semibold text-text-inverse ${
-              isRecruiting ? 'bg-success' : 'bg-neutral-65'
-            }`}
-          >
-            {isRecruiting ? '모집중' : '모집 마감'}
-          </span>
+          {isAuthor ? (
+            <button
+              type="button"
+              onClick={() => void handleToggleStatus()}
+              disabled={isChangingStatus}
+              title={isRecruiting ? '클릭하면 모집 마감' : '클릭하면 다시 모집'}
+              className={`mt-1 flex h-7 shrink-0 items-center rounded-full px-3 text-[12px] font-semibold text-text-inverse transition-opacity hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                isRecruiting ? 'bg-success' : 'bg-neutral-65'
+              }`}
+            >
+              {isChangingStatus
+                ? '...'
+                : isRecruiting
+                  ? '모집중'
+                  : '모집 마감'}
+            </button>
+          ) : (
+            <span
+              className={`mt-1 flex h-7 shrink-0 items-center rounded-full px-3 text-[12px] font-semibold text-text-inverse ${
+                isRecruiting ? 'bg-success' : 'bg-neutral-65'
+              }`}
+            >
+              {isRecruiting ? '모집중' : '모집 마감'}
+            </span>
+          )}
         </section>
 
         {/* 태그 + 작성자/마감 박스 */}
@@ -269,6 +446,24 @@ function PostDetailPage() {
               마감 기한 : {post.duedate}
             </span>
           </div>
+
+          {/* 작성자 전용 — 모집 상태 토글 */}
+          {isAuthor && (
+            <button
+              type="button"
+              onClick={() => void handleToggleStatus()}
+              disabled={isChangingStatus}
+              className={`mt-1 h-9 self-end rounded-lg px-4 text-[13px] font-semibold text-text-inverse active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                isRecruiting ? 'bg-neutral-42' : 'bg-success'
+              }`}
+            >
+              {isChangingStatus
+                ? '변경 중...'
+                : isRecruiting
+                  ? '모집 마감하기'
+                  : '다시 모집하기'}
+            </button>
+          )}
         </section>
 
         {/* 내용설명 */}
@@ -288,22 +483,34 @@ function PostDetailPage() {
                 모집 역할이 없습니다.
               </p>
             ) : (
-              accepts.map((role) => (
-                <div
-                  key={role.aidx}
-                  className="flex items-center justify-between rounded-2xl bg-bg-subtle p-4"
-                >
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[15px] font-semibold text-text-primary">
-                      {role.role}
-                    </span>
-                    <span className="text-[13px] font-medium text-text-secondary">
-                      🪙 {role.point} 코인
-                    </span>
+              accepts.map((role) => {
+                // 내가 신청한 자리(또는 지급 완료 등)면 "지원 완료" 도장 표시
+                const showStamp = role.uidx === uidx && role.uidx !== null;
+                return (
+                  <div
+                    key={role.aidx}
+                    className="relative flex items-center justify-between overflow-hidden rounded-2xl bg-bg-subtle p-4"
+                  >
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[15px] font-semibold text-text-primary">
+                        {role.role}
+                      </span>
+                      <span className="text-[13px] font-medium text-text-secondary">
+                        🪙 {role.point} 코인
+                      </span>
+                    </div>
+
+                    {/* 시안 — 내가 신청한 자리에 "지원 완료" 도장 */}
+                    {showStamp && (
+                      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 rounded-md border-2 border-neutral-65 bg-bg/70 px-3 py-1 text-[14px] font-bold text-neutral-65 opacity-80">
+                        지원 완료
+                      </div>
+                    )}
+
+                    {renderRoleButton(role)}
                   </div>
-                  {renderRoleButton(role)}
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </section>
