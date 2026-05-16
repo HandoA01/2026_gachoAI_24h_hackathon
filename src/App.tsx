@@ -4,6 +4,9 @@ import Signup from './pages/Signup/Signup';
 import Profile from './pages/Profile/Profile';
 import Home from './pages/Home/Home';
 import Layout from './components/Layout/Layout';
+import PostListPage from './pages/PostList/PostListPage';
+import PostDetailPage from './pages/PostDetail/PostDetailPage';
+import PostCreatePage from './pages/PostCreate/PostCreatePage';
 
 // Placeholder for missing pages in bottom nav
 function EmptyPage({ title }: { title: string }) {
@@ -25,12 +28,15 @@ function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/posts" element={<EmptyPage title="게시글" />} />
-          <Route path="/write" element={<EmptyPage title="글쓰기" />} />
+          <Route path="/posts" element={<PostListPage />} />
+          <Route path="/posts/create" element={<PostCreatePage />} />
           <Route path="/ranking" element={<EmptyPage title="랭킹" />} />
         </Route>
 
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        {/* Detail pages without bottom navigation */}
+        <Route path="/posts/:postId" element={<PostDetailPage />} />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
