@@ -2,9 +2,8 @@ import { apiClient } from './client';
 import type { PostListResponse, Post, PostStatus } from '../types/post';
 
 // 백엔드 donation 응답 → 프론트 Post 어댑터
-// 명세 기준:
-//   status 0 = 모집 마감, 1 = 모집 중
-//   exercise/study/music/game/clean: 0 = 관련 있음, 1 = 관련 없음
+// 명세: status 0 = 모집 마감, 1 = 모집 중
+//       exercise/study/music/game/clean: 0 = 관련 있음, 1 = 관련 없음
 function toPost(d: any): Post {
   const tags: string[] = [];
   if (d.exercise === 0) tags.push('운동');
@@ -41,6 +40,33 @@ function toPost(d: any): Post {
   };
 }
 
+// 한글 태그 배열 → 백엔드 0/1 필드 (0 = 관련 있음 / 1 = 관련 없음)
+function tagsToFields(tags: string[]) {
+  return {
+    exercise: tags.includes('운동') ? 0 : 1,
+    study: tags.includes('공부') ? 0 : 1,
+    music: tags.includes('음악') ? 0 : 1,
+    game: tags.includes('게임') ? 0 : 1,
+    clean: tags.includes('청소') ? 0 : 1,
+  };
+}
+
+// 게시글 작성 입력 (프론트 친화 형식)
+export interface CreatePostInput {
+  uidx: number;
+  title: string;
+  content: string;
+  deadline: string; // YYYY-MM-DD
+  tags: string[]; // ['운동' | '공부' | '음악' | '게임' | '청소']
+  roles: Array<{ name: string; coinReward: number }>;
+}
+
+// 게시글 작성 응답
+export interface CreatePostResponse {
+  res_status: boolean;
+  didx?: number;
+}
+
 export const postApi = {
   getPosts: async (params?: {
     page?: number;
@@ -67,12 +93,27 @@ export const postApi = {
     };
   },
   getPostById: async (postId: number): Promise<Post> => {
-    const response = await apiClient.get(`/api/donation/${postId}`);
+    const response = await apiClient.post(`/api/donation/${postId}`, {});
     console.log('getPostById response:', response.data);
     return response.data;
   },
-  createPost: async (data: any): Promise<Post> => {
-    const response = await apiClient.post('/api/donation/write', data);
+  createPost: async (input: CreatePostInput): Promise<CreatePostResponse> => {
+    // 프론트 입력 → 백엔드 명세 형식으로 변환
+    const payload = {
+      uidx: input.uidx,
+      title: input.title,
+      duedate: input.deadline,
+      ...tagsToFields(input.tags),
+      text: input.content,
+      accept: input.roles.map((r) => ({
+        role: r.name,
+        point: Number(r.coinReward) || 0,
+      })),
+    };
+    const response = await apiClient.post<CreatePostResponse>(
+      '/api/donation/write',
+      payload,
+    );
     console.log('createPost response:', response.data);
     return response.data;
   },
@@ -80,6 +121,6 @@ export const postApi = {
     await apiClient.post(`/api/donation/${postId}/join`, { roleId });
   },
   updateParticipantStatus: async (postId: number, participantId: number, status: 'APPROVED' | 'REJECTED'): Promise<void> => {
-    await apiClient.patch(`/api/donation/${postId}/participants/${participantId}`, { status });
+    await apiClient.post(`/api/donation/${postId}/participants/${participantId}`, { status });
   },
 };

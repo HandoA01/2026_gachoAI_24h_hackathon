@@ -5,6 +5,7 @@ import Button from '../../components/Button/Button';
 import Input from '../../components/Input/Input';
 import TextArea from '../../components/Input/TextArea';
 import { postApi } from '../../api/post';
+import { useAuthStore } from '../../store/authStore';
 
 interface RoleInput {
   name: string;
@@ -13,6 +14,7 @@ interface RoleInput {
 
 const PostCreatePage: React.FC = () => {
   const navigate = useNavigate();
+  const { uidx } = useAuthStore();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState<string[]>([]);
@@ -47,15 +49,28 @@ const PostCreatePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!uidx) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
     try {
-      await postApi.createPost({
+      const res = await postApi.createPost({
+        uidx,
         title,
         content,
-        tags,
         deadline,
-        roles: roles.map((r) => ({ ...r, maxCount: 1 })), // Default maxCount to 1 for simplicity
+        tags,
+        roles,
       });
-      navigate('/posts');
+
+      if (res.res_status) {
+        navigate('/posts');
+      } else {
+        alert('게시글 등록에 실패했습니다.');
+      }
     } catch (error) {
       console.error('Failed to create post:', error);
       alert('게시글 등록에 실패했습니다.');
