@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import Header from '../../components/common/Header';
 import StatusBadge from '../../components/common/StatusBadge';
 import TagChip from '../../components/common/TagChip';
 import Button from '../../components/Button/Button';
 import { postApi } from '../../api/post';
 import { useAuthStore } from '../../store/authStore';
-import type { Post, Participant } from '../../types/post';
+import type { Post } from '../../types/post';
 
 const PostDetailPage: React.FC = () => {
   const { postId } = useParams<{ postId: string }>();
-  const navigate = useNavigate();
   const { uidx } = useAuthStore();
   const [post, setPost] = useState<Post | null>(null);
   const [isLoading, setIsLoading] = useState(true);
