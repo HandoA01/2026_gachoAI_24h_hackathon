@@ -51,6 +51,37 @@ function tagsToFields(tags: string[]) {
   };
 }
 
+// 게시글 상세 (프론트 친화 형식)
+export interface PostDetail {
+  didx: number;
+  writerIdx: number;
+  status: number; // 0 = 모집 마감, 1 = 모집 중
+  title: string;
+  duedate: string;
+  text: string;
+  tags: string[]; // 변환된 한글 태그
+}
+
+// 백엔드 detail 응답 → PostDetail 어댑터
+function toPostDetail(d: any): PostDetail {
+  const tags: string[] = [];
+  if (d.exercise === 0) tags.push('운동');
+  if (d.study === 0) tags.push('공부');
+  if (d.music === 0) tags.push('음악');
+  if (d.game === 0) tags.push('게임');
+  if (d.clean === 0) tags.push('청소');
+
+  return {
+    didx: d.didx,
+    writerIdx: d.writerIdx,
+    status: d.status,
+    title: d.title ?? '',
+    duedate: d.duedate ?? '',
+    text: d.text ?? '',
+    tags,
+  };
+}
+
 // 게시글 작성 입력 (프론트 친화 형식)
 export interface CreatePostInput {
   uidx: number;
@@ -92,10 +123,14 @@ export const postApi = {
       hasNext: false,
     };
   },
-  getPostById: async (postId: number): Promise<Post> => {
-    const response = await apiClient.post(`/api/donation/${postId}`, {});
-    console.log('getPostById response:', response.data);
-    return response.data;
+  // 명세: POST /api/donation/detail { didx }
+  getPostDetail: async (didx: number): Promise<PostDetail> => {
+    const response = await apiClient.post('/api/donation/detail', { didx });
+    console.log('getPostDetail response:', response.data);
+    if (!response.data?.res_status) {
+      throw new Error('Failed to fetch post detail');
+    }
+    return toPostDetail(response.data);
   },
   createPost: async (input: CreatePostInput): Promise<CreatePostResponse> => {
     // 프론트 입력 → 백엔드 명세 형식으로 변환
