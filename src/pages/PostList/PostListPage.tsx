@@ -27,7 +27,7 @@ const PostListPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg relative">
+    <div className="relative flex min-h-full flex-col bg-bg">
       <Header title="전체 게시글" />
       
       <main className="flex flex-1 flex-col gap-3 p-4">

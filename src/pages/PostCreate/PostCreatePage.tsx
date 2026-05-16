@@ -47,9 +47,7 @@ const PostCreatePage: React.FC = () => {
 
   const totalPoints = roles.reduce((sum, role) => sum + Number(role.coinReward), 0);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     if (!uidx) {
       alert('로그인이 필요합니다.');
       navigate('/login');
@@ -78,10 +76,16 @@ const PostCreatePage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg">
+    <div className="flex min-h-full flex-col bg-bg">
       <Header title="게시글 작성" />
       
-      <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-6 p-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void handleSubmit();
+        }}
+        className="flex flex-1 flex-col gap-6 p-4"
+      >
         <section className="flex flex-col gap-1.5">
           <label className="text-[14px] font-semibold text-text-primary">제목</label>
           <Input 
